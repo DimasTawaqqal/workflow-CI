@@ -1,0 +1,48 @@
+name: Train and Deploy Model
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'MLProject/**'        # Jalankan workflow hanya jika ada perubahan di folder MLProject
+  workflow_dispatch:          # Memungkinkan Anda menjalankan workflow secara manual dari tab Actions GitHub
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.7'
+
+      - name: Install dependencies
+        run: |
+          pip install mlflow scikit-learn pandas numpy imbalanced-learn dagshub
+
+      - name: Run MLflow Project
+        run: |
+          mlflow run MLProject/ --env-manager=local
+
+      - name: Build and Push Docker Image
+        env:
+          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+          DOCKER_HUB_ACCESS_TOKEN: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+        run: |
+          # Login ke Docker Hub
+          echo "${DOCKER_HUB_ACCESS_TOKEN}" | docker login -u "${DOCKER_HUB_USERNAME}" --password-stdin
+          
+          # Bangun Docker image dari model yang baru saja dilatih.
+          # Model URI ini harus disesuaikan dengan output dari MLflow run Anda.
+          # Lihat log mlflow run untuk mendapatkan mlflow run ID.
+          # Contoh: mlflow models build-docker -m "runs:/<RUN_ID>/model" -n "username/nama-image:latest" --enable-mlserver
+          
+          # *** PENTING: Gantilah <RUN_ID> dengan ID run yang dihasilkan pada step sebelumnya. ***
+          # *** Ganti juga 'username/' dengan username Docker Hub Anda. ***
+          mlflow models build-docker -m "runs:/aed94560508c42b88663cab83d296133/model" -n "${{ secrets.DOCKER_HUB_USERNAME }}/bank-marketing-model:latest" --enable-mlserver
+          
+          # Push image ke Docker Hub
+          docker push "${{ secrets.DOCKER_HUB_USERNAME }}/bank-marketing-model:latest"

@@ -1,0 +1,16 @@
+# MLProject/conda.yaml
+name: mlflow-env
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.12.7
+  - pip
+  - pip:
+    - mlflow==2.19.0
+    - scikit-learn==1.6.0
+    - pandas==2.2.3
+    - numpy==2.2.1
+    - imbalanced-learn==0.12.3
+    - joblib==1.4.2
+    - dagshub==0.3.4
