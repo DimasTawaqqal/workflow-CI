@@ -43,7 +43,7 @@ jobs:
           echo "${DOCKER_HUB_ACCESS_TOKEN}" | docker login -u "${DOCKER_HUB_USERNAME}" --password-stdin
 
           # Baca Run ID dari file yang disimpan oleh modelling.py
-          RUN_ID=$(cat MLProject/run_id.txt)
+          RUN_ID=$(cat run_id.txt)
           echo "Using Run ID: $RUN_ID"
 
           # Build Docker image dari model MLflow
