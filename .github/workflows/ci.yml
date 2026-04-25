@@ -26,8 +26,9 @@ jobs:
           DAGSHUB_USER_TOKEN: ${{ secrets.DAGSHUB_USER_TOKEN }}
           MLFLOW_TRACKING_USERNAME: DimasTawaqqal
           MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_USER_TOKEN }}
+          MLFLOW_TRACKING_URI: https://dagshub.com/DimasTawaqqal/bankmarketing-mlflow.mlflow
         run: |
-          mlflow run MLProject/ --env-manager=local
+          python MLProject/modelling.py --n_estimators 100 --max_depth 10
 
       - name: Build and Push Docker Image
         env:
