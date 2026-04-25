@@ -31,20 +31,21 @@ jobs:
 
       - name: Build and Push Docker Image
         env:
+          DAGSHUB_USER_TOKEN: ${{ secrets.DAGSHUB_USER_TOKEN }}
           DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
           DOCKER_HUB_ACCESS_TOKEN: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
         run: |
           # Login ke Docker Hub
           echo "${DOCKER_HUB_ACCESS_TOKEN}" | docker login -u "${DOCKER_HUB_USERNAME}" --password-stdin
 
-          # Ambil Run ID dari MLflow run sebelumnya secara dinamis
+          # Ambil Run ID terbaru dari MLflow secara dinamis
           RUN_ID=$(python - <<'EOF'
           import mlflow
           import os
 
           os.environ["MLFLOW_TRACKING_USERNAME"] = "DimasTawaqqal"
           os.environ["MLFLOW_TRACKING_PASSWORD"] = os.environ["DAGSHUB_USER_TOKEN"]
-          mlflow.set_tracking_uri("https://dagshub.com/DimasTawaqqal/workflow-CI.mlflow")
+          mlflow.set_tracking_uri("https://dagshub.com/DimasTawaqqal/bankmarketing-mlflow.mlflow")
 
           client = mlflow.tracking.MlflowClient()
           experiment = client.get_experiment_by_name("Default")
@@ -67,7 +68,3 @@ jobs:
 
           # Push image ke Docker Hub
           docker push "${DOCKER_HUB_USERNAME}/bank-marketing-model:latest"
-        env:
-          DAGSHUB_USER_TOKEN: ${{ secrets.DAGSHUB_USER_TOKEN }}
-          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
-          DOCKER_HUB_ACCESS_TOKEN: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
