@@ -35,30 +35,15 @@ jobs:
           DAGSHUB_USER_TOKEN: ${{ secrets.DAGSHUB_USER_TOKEN }}
           DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
           DOCKER_HUB_ACCESS_TOKEN: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+          MLFLOW_TRACKING_USERNAME: DimasTawaqqal
+          MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_USER_TOKEN }}
+          MLFLOW_TRACKING_URI: https://dagshub.com/DimasTawaqqal/bankmarketing-mlflow.mlflow
         run: |
           # Login ke Docker Hub
           echo "${DOCKER_HUB_ACCESS_TOKEN}" | docker login -u "${DOCKER_HUB_USERNAME}" --password-stdin
 
-          # Ambil Run ID terbaru dari MLflow secara dinamis
-          RUN_ID=$(python - <<'EOF'
-          import mlflow
-          import os
-
-          os.environ["MLFLOW_TRACKING_USERNAME"] = "DimasTawaqqal"
-          os.environ["MLFLOW_TRACKING_PASSWORD"] = os.environ["DAGSHUB_USER_TOKEN"]
-          mlflow.set_tracking_uri("https://dagshub.com/DimasTawaqqal/bankmarketing-mlflow.mlflow")
-
-          client = mlflow.tracking.MlflowClient()
-          experiment = client.get_experiment_by_name("Default")
-          runs = client.search_runs(
-              experiment_ids=[experiment.experiment_id],
-              order_by=["start_time DESC"],
-              max_results=1
-          )
-          print(runs[0].info.run_id)
-          EOF
-          )
-
+          # Baca Run ID dari file yang disimpan oleh modelling.py
+          RUN_ID=$(cat MLProject/run_id.txt)
           echo "Using Run ID: $RUN_ID"
 
           # Build Docker image dari model MLflow

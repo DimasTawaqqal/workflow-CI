@@ -56,5 +56,9 @@ def main():
         print(f"Run ID: {run.info.run_id}")
         print(f"Model trained — accuracy: {accuracy:.4f}, roc_auc: {roc_auc:.4f}")
 
+        # Simpan run_id ke file agar bisa dibaca oleh step Docker di CI
+        with open("run_id.txt", "w") as f:
+            f.write(run.info.run_id)
+
 if __name__ == "__main__":
     main()
