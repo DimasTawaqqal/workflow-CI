@@ -19,11 +19,13 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install mlflow scikit-learn pandas numpy imbalanced-learn dagshub
+          pip install mlflow==2.19.0 scikit-learn==1.6.0 pandas==2.2.3 numpy==2.2.1 imbalanced-learn==0.12.3 joblib==1.4.2 dagshub==0.3.4
 
       - name: Run MLflow Project
         env:
           DAGSHUB_USER_TOKEN: ${{ secrets.DAGSHUB_USER_TOKEN }}
+          MLFLOW_TRACKING_USERNAME: DimasTawaqqal
+          MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_USER_TOKEN }}
         run: |
           mlflow run MLProject/ --env-manager=local
 
@@ -34,15 +36,38 @@ jobs:
         run: |
           # Login ke Docker Hub
           echo "${DOCKER_HUB_ACCESS_TOKEN}" | docker login -u "${DOCKER_HUB_USERNAME}" --password-stdin
-          
-          # Bangun Docker image dari model yang baru saja dilatih.
-          # Model URI ini harus disesuaikan dengan output dari MLflow run Anda.
-          # Lihat log mlflow run untuk mendapatkan mlflow run ID.
-          # Contoh: mlflow models build-docker -m "runs:/<RUN_ID>/model" -n "username/nama-image:latest" --enable-mlserver
-          
-          # *** PENTING: Gantilah <RUN_ID> dengan ID run yang dihasilkan pada step sebelumnya. ***
-          # *** Ganti juga 'username/' dengan username Docker Hub Anda. ***
-          mlflow models build-docker -m "runs:/aed94560508c42b88663cab83d296133/model" -n "${{ secrets.DOCKER_HUB_USERNAME }}/bank-marketing-model:latest" --enable-mlserver
-          
+
+          # Ambil Run ID dari MLflow run sebelumnya secara dinamis
+          RUN_ID=$(python - <<'EOF'
+          import mlflow
+          import os
+
+          os.environ["MLFLOW_TRACKING_USERNAME"] = "DimasTawaqqal"
+          os.environ["MLFLOW_TRACKING_PASSWORD"] = os.environ["DAGSHUB_USER_TOKEN"]
+          mlflow.set_tracking_uri("https://dagshub.com/DimasTawaqqal/workflow-CI.mlflow")
+
+          client = mlflow.tracking.MlflowClient()
+          experiment = client.get_experiment_by_name("Default")
+          runs = client.search_runs(
+              experiment_ids=[experiment.experiment_id],
+              order_by=["start_time DESC"],
+              max_results=1
+          )
+          print(runs[0].info.run_id)
+          EOF
+          )
+
+          echo "Using Run ID: $RUN_ID"
+
+          # Build Docker image dari model MLflow
+          mlflow models build-docker \
+            -m "runs:/${RUN_ID}/model" \
+            -n "${DOCKER_HUB_USERNAME}/bank-marketing-model:latest" \
+            --enable-mlserver
+
           # Push image ke Docker Hub
-          docker push "${{ secrets.DOCKER_HUB_USERNAME }}/bank-marketing-model:latest"
+          docker push "${DOCKER_HUB_USERNAME}/bank-marketing-model:latest"
+        env:
+          DAGSHUB_USER_TOKEN: ${{ secrets.DAGSHUB_USER_TOKEN }}
+          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+          DOCKER_HUB_ACCESS_TOKEN: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
