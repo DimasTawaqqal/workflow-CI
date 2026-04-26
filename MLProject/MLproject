@@ -1,4 +1,3 @@
-# MLProject/MLproject
 name: bank-marketing-project
 
 conda_env: conda.yaml
