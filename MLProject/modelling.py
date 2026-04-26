@@ -1,4 +1,3 @@
-# MLProject/modelling.py
 import argparse
 import pandas as pd
 import numpy as np
@@ -14,18 +13,12 @@ def main():
     parser.add_argument("--max_depth", type=int, default=10)
     args = parser.parse_args()
 
-    # Memuat dataset — path absolut berdasarkan lokasi file ini
-    # MLflow menjalankan script dari dalam folder MLProject/,
-    # sehingga '../preprocessed_data/' mengarah ke root repo.
     data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'preprocessed_data')
     X_train = pd.read_csv(os.path.join(data_dir, 'X_train_preprocessed.csv'))
     X_test  = pd.read_csv(os.path.join(data_dir, 'X_test_preprocessed.csv'))
     y_train = pd.read_csv(os.path.join(data_dir, 'y_train_preprocessed.csv')).values.ravel()
     y_test  = pd.read_csv(os.path.join(data_dir, 'y_test_preprocessed.csv')).values.ravel()
 
-    # Konfigurasi DagsHub melalui environment variable (diset di ci.yml)
-    # MLFLOW_TRACKING_USERNAME dan MLFLOW_TRACKING_PASSWORD di-inject otomatis
-    # dari secrets GitHub Actions sehingga tidak perlu dagshub.init() di sini.
     mlflow.set_tracking_uri('https://dagshub.com/DimasTawaqqal/bankmarketing-mlflow.mlflow')
 
     with mlflow.start_run(run_name="CI_Run") as run:
@@ -56,7 +49,6 @@ def main():
         print(f"Run ID: {run.info.run_id}")
         print(f"Model trained — accuracy: {accuracy:.4f}, roc_auc: {roc_auc:.4f}")
 
-        # Simpan run_id ke file agar bisa dibaca oleh step Docker di CI
         with open("run_id.txt", "w") as f:
             f.write(run.info.run_id)
 
