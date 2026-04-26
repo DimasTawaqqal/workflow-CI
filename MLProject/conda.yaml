@@ -1,4 +1,3 @@
-# MLProject/conda.yaml
 name: mlflow-env
 channels:
   - conda-forge
