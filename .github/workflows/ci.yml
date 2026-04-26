@@ -39,18 +39,18 @@ jobs:
           MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_USER_TOKEN }}
           MLFLOW_TRACKING_URI: https://dagshub.com/DimasTawaqqal/bankmarketing-mlflow.mlflow
         run: |
-          # Login ke Docker Hub
+          
           echo "${DOCKER_HUB_ACCESS_TOKEN}" | docker login -u "${DOCKER_HUB_USERNAME}" --password-stdin
 
-          # Baca Run ID dari file yang disimpan oleh modelling.py
+          
           RUN_ID=$(cat run_id.txt)
           echo "Using Run ID: $RUN_ID"
 
-          # Build Docker image dari model MLflow
+          
           mlflow models build-docker \
             -m "runs:/${RUN_ID}/model" \
             -n "${DOCKER_HUB_USERNAME}/bank-marketing-model:latest" \
             --enable-mlserver
 
-          # Push image ke Docker Hub
+         
           docker push "${DOCKER_HUB_USERNAME}/bank-marketing-model:latest"
