@@ -13,7 +13,7 @@ def main():
     parser.add_argument("--max_depth", type=int, default=10)
     args = parser.parse_args()
 
-    data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'preprocessed_data')
+    data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'preprocessed_data')
     X_train = pd.read_csv(os.path.join(data_dir, 'X_train_preprocessed.csv'))
     X_test  = pd.read_csv(os.path.join(data_dir, 'X_test_preprocessed.csv'))
     y_train = pd.read_csv(os.path.join(data_dir, 'y_train_preprocessed.csv')).values.ravel()
@@ -49,7 +49,8 @@ def main():
         print(f"Run ID: {run.info.run_id}")
         print(f"Model trained — accuracy: {accuracy:.4f}, roc_auc: {roc_auc:.4f}")
 
-        with open("run_id.txt", "w") as f:
+        workspace = os.getenv("GITHUB_WORKSPACE", ".")
+        with open(os.path.join(workspace, "run_id.txt"), "w") as f:
             f.write(run.info.run_id)
 
 if __name__ == "__main__":
